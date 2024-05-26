@@ -1,0 +1,7 @@
+a.out
+build/
+bin/
+.vscode/
+.gdbinit
+*.o
+*.gch
