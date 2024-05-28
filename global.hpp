@@ -45,6 +45,7 @@
 #define LUI   0x37 // 0b0110111 (I-type)
 #define ADDI  0x13 // 0b0010011 (I-type)
 #define ADD   0x33 // 0b0110011 (R-type)
+#define SUB   0x33 // 0b0110011 (R-type)
 
 #define opcode_mask       0x7f        // 0b1111111       << 0
 
@@ -79,7 +80,7 @@ enum InstructionType {
 };
 
 struct Instruction {
-  std::string name;
+  // std::string name;
   InstructionType type;
   uint8_t opcode;
   uint8_t rd;
@@ -89,7 +90,7 @@ struct Instruction {
   uint8_t funct7;
   uint16_t imm;
 
-  // Instruction() : opcode(0), rd(0), funct3(0), rs1(0), rs2(0), funct7(0), imm(0) {}
+  void print();
   // std::function<void(Cpu&, word_t)> exec;
 };
 
@@ -109,47 +110,28 @@ struct TypeI {
 };
 
 
-std::map<int, Instruction> SUPPORTED_INSTRUCTIONS = {
-  {
-    ADDI,
-    {
-      "ADDI",
-      InstructionType::I,
-      // [](Cpu& cpu, word_t w) {
-      //   TypeI i = parse_itype(w);
-      //   cpu.x[i.rd] = cpu.x[i.rs1] + i.imm;
-      // }
-    }
-  },
-  {
-    ADD,
-    {
-      "ADD",
-      InstructionType::R,
-      // [](Cpu& cpu, word_t w) {
-      //   TypeI i = parse_itype(w);
-      //   cpu.x[i.rd] = cpu.x[i.rs1] + i.imm;
-      // }
-    }
-  }
+std::map<int, InstructionType> SUPPORTED_INSTRUCTIONS = {
+  { ADDI, InstructionType::I },
+  { ADD,  InstructionType::R },
+  { SUB,  InstructionType::R }
 };
 
-void print_instr(Instruction& instr) {
-  std::cout << std::setw(8) << "opcode: " << std::bitset<7>(instr.opcode) << std::endl;
-  std::cout << std::setw(8) << "rd: "     << std::bitset<5>(instr.rd) << std::endl;
-  std::cout << std::setw(8) << "funct3: " << std::bitset<3>(instr.funct3) << std::endl;
-  std::cout << std::setw(8) << "rs1: "    << std::bitset<5>(instr.rs1) << std::endl;
-  std::cout << std::setw(8) << "rs2: "    << std::bitset<5>(instr.rs2) << std::endl;
-  std::cout << std::setw(8) << "imm: "    << std::bitset<12>(instr.imm) << std::endl;
-  std::cout << std::setw(8) << "funct7: " << std::bitset<7>(instr.funct7) << std::endl;
+void Instruction::print() {
+  std::cout << std::setw(8) << "opcode: " << std::bitset<7>(opcode) << std::endl;
+  std::cout << std::setw(8) << "rd: "     << std::bitset<5>(rd) << std::endl;
+  std::cout << std::setw(8) << "funct3: " << std::bitset<3>(funct3) << std::endl;
+  std::cout << std::setw(8) << "rs1: "    << std::bitset<5>(rs1) << std::endl;
+  std::cout << std::setw(8) << "rs2: "    << std::bitset<5>(rs2) << std::endl;
+  std::cout << std::setw(8) << "imm: "    << std::bitset<12>(imm) << std::endl;
+  std::cout << std::setw(8) << "funct7: " << std::bitset<7>(funct7) << std::endl;
 }
 
 void parse_rtype(Instruction& instr, word_t w) {
-  instr.rd =     w & rtype_rd_mask;
-  instr.funct3 = w & rtype_funct3_mask;
-  instr.rs1 =    w & rtype_rs1_mask;
-  instr.rs2 =    w & rtype_rs2_mask;
-  instr.funct7 = w & rtype_funct7_mask;
+  instr.rd =     (w & rtype_rd_mask)      >> 7;
+  instr.funct3 = (w & rtype_funct3_mask)  >> 12;
+  instr.rs1 =    (w & rtype_rs1_mask)     >> 15;
+  instr.rs2 =    (w & rtype_rs2_mask)     >> 20;
+  instr.funct7 = (w & rtype_funct7_mask)  >> 25;
 }
 
 void parse_itype(Instruction& instr, word_t w) {

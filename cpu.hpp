@@ -12,8 +12,12 @@ class Cpu {
 public:
   Cpu();
   ~Cpu();
+
   word_t pc;
+
   std::vector<word_t> x; // x registers
+  std::vector<word_t> f; // f registers
+
   word_t fetch(Memory& mem, word_t addr);
   Instruction decode(word_t data);
   void execute(Instruction& ins);
@@ -22,7 +26,9 @@ public:
 
 Cpu::Cpu() {
   x.assign(32, 0);
+  f.assign(32, 0.0);
   std::fill(x.begin(), x.end(), 0);
+  std::fill(f.begin(), f.end(), 0.0);
 }
 
 Cpu::~Cpu() {
@@ -34,19 +40,11 @@ word_t Cpu::fetch(Memory& mem, word_t addr) {
 }
 
 Instruction Cpu::decode(word_t w) {
-
-  std::cout << std::hex << w << std::endl;
-  Instruction instr;
-  instr.name = SUPPORTED_INSTRUCTIONS[instr.opcode].name;
+  Instruction instr = {};
+  // instr.name = SUPPORTED_INSTRUCTIONS[instr.opcode].name;
   instr.opcode = w & opcode_mask;
-  instr.rd = 0;
-  instr.funct3 = 0;
-  instr.rs1 = 0;
-  instr.rs2 = 0;
-  instr.funct7 = 0;
-  instr.imm = 0;
 
-  switch (SUPPORTED_INSTRUCTIONS[instr.opcode].type) {
+  switch (SUPPORTED_INSTRUCTIONS[instr.opcode]) {
     case InstructionType::R:
       std::cout << "R" << std::endl;
       parse_rtype(instr, w);
@@ -62,15 +60,25 @@ Instruction Cpu::decode(word_t w) {
   return instr;
 }
 
-void Cpu::execute(Instruction& ins) {
-  // std::cout << "hello: " << std::hex << static_cast<int>(ins.opcode) << std::endl;
-  switch (ins.opcode) {
+void Cpu::execute(Instruction& i) {
+  switch (i.opcode) {
     case ADDI:
       std::cout << "execute ADDI" << std::endl;
-      x[ins.rd] = x[ins.rs1] + ins.imm;
+      x[i.rd] = x[i.rs1] + i.imm;
       break;
-    case ADD:
-      x[ins.rd] = x[ins.rs1] + x[ins.rs2];
+    case 0x33: // ADD, SUB, XOR, OR, AND
+      switch (i.funct7) {
+        case 0b0000000: // ADD
+          std::cout << "execute ADD" << std::endl;
+          x[i.rd] = x[i.rs1] + x[i.rs2];
+          break;
+        case 0b0100000: // SUB
+          std::cout << "execute SUB" << std::endl;
+          x[i.rd] = x[i.rs1] - x[i.rs2];
+          break;
+        default:
+          std::cout << "illegal instruction" << std::endl;
+      }
       break;
     default:
       std::cout << "illegal instruction" << std::endl;
@@ -78,9 +86,11 @@ void Cpu::execute(Instruction& ins) {
 }
 
 void Cpu::tick(Memory& mem) {
-    word_t data = fetch(mem, x[pc]);
-    Instruction instr = decode(data);
-    print_instr(instr);
-    execute(instr);
-    pc++;
+  // std::cout << pc << std::endl;
+  word_t data = fetch(mem, pc);
+  // std::cout << data << std::endl;
+  Instruction instr = decode(data);
+  instr.print();
+  execute(instr);
+  pc++;
 }
