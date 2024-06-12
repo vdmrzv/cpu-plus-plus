@@ -21,6 +21,8 @@ public:
 
   byte_t read_byte(word_t address) const;
   word_t read_word(word_t address) const;
+
+  int is_valid_address(word_t address) const;
 };
 
 Memory::Memory(uint32_t sz) {
@@ -38,35 +40,35 @@ void Memory::print_size() {
 
 void Memory::init() {
   for (uint32_t i = 0; i < size; ++i) {
-    storage[i] = 0b00000000;
+    storage[i] = 0x0;
   }
 }
 
-void Memory::write_byte(word_t address, byte_t data) {
+int Memory::is_valid_address(word_t address) const {
   if (address > size) {
-    throw std::length_error("store to address > size");
+    return 0;
+  } else if (address < 0) {
+    return 0;
   }
+  return 1;
+}
+
+void Memory::write_byte(word_t address, byte_t data) {
+  // if (is_valid_address(address))
   storage[address] = data;
 }
 
 void Memory::write_word(word_t address, word_t data) {
-  if (address > size) {
-    throw std::length_error("store to address > size");
-  }
   reinterpret_cast<word_t*>(storage)[address] = data;
 }
 
 byte_t Memory::read_byte(word_t address) const {
-  if (address > size) {
-    throw std::length_error("fetch from address > size");
-  }
+  // if (is_valid_address(address))
   return storage[address];
 }
 
 word_t Memory::read_word(word_t address) const {
-  if (address > size) {
-    throw std::length_error("fetch from address > size");
-  }
+  // if (is_valid_address(address))
   return reinterpret_cast<word_t*>(storage)[address];
 }
 

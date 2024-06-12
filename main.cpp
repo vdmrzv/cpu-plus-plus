@@ -32,8 +32,6 @@ int main()
 
   // 0b1011110111000001111 0111011
 
-
-
   cpu.pc = 0x00000000;
   uint32_t cycles = 4;
   while (cycles > 0) {
