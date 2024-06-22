@@ -519,9 +519,11 @@ void Cpu::tick(Memory& mem) {
   word_t fetched_word = fetch(mem, pc);
   word_t word2decode;
   if ((fetched_word & 0x3) == 0x3) {
+    std::cout << fetched_word << "non-compressed" << std::endl;
     pc += 4; // 32-bit length non-compressed instruction
     word2decode = fetched_word;
   } else {
+    std::cout << fetched_word << "compressed" << std::endl;
     pc += 2; // 16-bit length compressed instruction
     word2decode = decompress(fetched_word & 0xffff);
   }

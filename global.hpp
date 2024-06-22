@@ -117,13 +117,15 @@ std::map<int, InstructionType> SUPPORTED_INSTRUCTIONS = {
 };
 
 void Instruction::print() {
-  std::cout << std::setw(8) << "opcode: " << std::bitset<7>(opcode) << std::endl;
-  std::cout << std::setw(8) << "rd: "     << std::bitset<5>(rd)     << std::endl;
-  std::cout << std::setw(8) << "funct3: " << std::bitset<3>(funct3) << std::endl;
-  std::cout << std::setw(8) << "rs1: "    << std::bitset<5>(rs1)    << std::endl;
-  std::cout << std::setw(8) << "rs2: "    << std::bitset<5>(rs2)    << std::endl;
-  std::cout << std::setw(8) << "imm: "    << std::bitset<12>(imm)   << std::endl;
-  std::cout << std::setw(8) << "funct7: " << std::bitset<7>(funct7) << std::endl;
+  std::cout
+    << std::setw(3) << "rd: "     << std::bitset<5>(rd) << "\t"
+    << std::setw(8) << "funct3: " << std::bitset<3>(funct3) << "\t"
+    << std::setw(8) << "rs1: "    << std::bitset<5>(rs1) << "\t"
+    << std::setw(8) << "rs2: "    << std::bitset<5>(rs2) << "\t"
+    << std::setw(8) << "imm: "    << std::bitset<12>(imm) << "\t"
+    << std::setw(8) << "funct7: " << std::bitset<7>(funct7) << "\t"
+    << std::setw(8) << "opcode: " << std::bitset<7>(opcode) << "\t"
+    << std::endl;
 }
 
 void parse_rtype(Instruction& instr, word_t w) {
