@@ -10,8 +10,6 @@ int main()
 {
   Memory ram(1024 * 1024 * 16);
   Cpu cpu;
-  // Mmu mmu;
-  // ram.print_size();
   ram.init();
   ram.write_word(0x00000000, 0x00300793);
   ram.write_word(0x00000004, 0x00200813);

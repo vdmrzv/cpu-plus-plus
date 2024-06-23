@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-#include "global.hpp"
+#include "common.hpp"
 
 class Memory {
 private:
@@ -18,9 +18,13 @@ public:
 
   void write_byte(word_t address, byte_t data);
   void write_word(word_t address, word_t data);
+  void write_hword(word_t address, hword_t data);
 
   byte_t read_byte(word_t address) const;
   word_t read_word(word_t address) const;
+  hword_t read_hword(word_t address) const;
+
+  void write_program(word_t address, std::vector<uint64_t> prog);
 
   int is_valid_address(word_t address) const;
 };
@@ -54,12 +58,15 @@ int Memory::is_valid_address(word_t address) const {
 }
 
 void Memory::write_byte(word_t address, byte_t data) {
-  // if (is_valid_address(address))
   storage[address] = data;
 }
 
 void Memory::write_word(word_t address, word_t data) {
   reinterpret_cast<word_t*>(storage)[address] = data;
+}
+
+void Memory::write_hword(word_t address, hword_t data) {
+  reinterpret_cast<hword_t*>(storage)[address] = data;
 }
 
 byte_t Memory::read_byte(word_t address) const {
@@ -71,5 +78,13 @@ word_t Memory::read_word(word_t address) const {
   // if (is_valid_address(address))
   return reinterpret_cast<word_t*>(storage)[address];
 }
+
+hword_t Memory::read_hword(word_t address) const {
+  // if (is_valid_address(address))
+  return reinterpret_cast<hword_t*>(storage)[address];
+}
+
+
+
 
 
