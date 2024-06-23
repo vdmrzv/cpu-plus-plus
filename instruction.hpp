@@ -7,7 +7,9 @@
 
 #include "common.hpp"
 
-#define opcode_mask       0x7f    // 0b1111111 << 0
+#define opcode_mask 0x7f  
+#define funct3_mask 0x7000
+#define funct7_mask 0xfe000000
 
 #define rtype_rd_mask     0xf80   // 0b11111 << 7
 #define rtype_funct3_mask 0x7000  // 0b111 << 12
@@ -130,6 +132,47 @@ void print_jtype() {
 }
 
 // uops 
+#define lui     0x01
+#define auipc   0x02
+#define jal     0x03
+#define jalr    0x04
+#define beq     0x05
+#define bne     0x06
+#define blt     0x07
+#define bge     0x08
+#define bltu    0x09
+#define bgeu    0x0a
+#define lb      0x0b
+#define lh      0x0c
+#define lw      0x0d
+#define lbu     0x0e
+#define lhu     0x0f
+#define sb      0x10
+#define sh      0x11
+#define sw      0x12
+#define addi    0x13
+#define slti    0x14
+#define sltiu   0x15
+#define xori    0x16
+#define ori     0x17
+#define andi    0x18
+#define slli    0x19
+#define srli    0x1a
+#define srai    0x1b
+#define add     0x1c
+#define sub     0x1d
+#define sll     0x1e
+#define slt     0x1f
+#define sltu    0x20
+#define xor     0x21
+#define srl     0x22
+#define sra     0x23
+#define or      0x24
+#define and     0x25
+#define fence   0x26
+#define ecall   0x27
+#define ebreak  0x28
+
 // uint32_t add = [](uint32_t lhs, uint32_t rhs) {
 //   // x[i.rd] = x[i.rs1] + x[i.rs2];
 // }

@@ -2,19 +2,24 @@
 #include <iomanip>
 #include <cstdint>
 
-#include "cpu.hpp"
-// #include "mmu.hpp"
-#include "memory.hpp"
+#include "../cpu.hpp"
+#include "../memory.hpp"
 
 int main()
 {
-  Memory ram(1024 * 1024 * 16);
-  Cpu cpu;
-  ram.init();
-  ram.write_word(0x00000000, 0x00300793);
-  ram.write_word(0x00000004, 0x00200813);
-  ram.write_word(0x00000008, 0x01078533);
-  ram.write_word(0x0000000c, 0x410785b3);
+  uint32_t ram_size = 1024 * 1024 * 16; // 16 MB
+  uint32_t l3 = 8 * 1024 * 1024; // 8 MB
+  uint32_t l2 = 512 * 1024; // 512 kB
+  uint32_t l1 = 32 * 1024; // 32 kB
+
+  Memory ram(ram_size);
+  Cpu cpu(l3, l2, l1);
+
+  // ram.init();
+  // ram.write_word(0x00000000, 0x00300793);
+  // ram.write_word(0x00000004, 0x00200813);
+  // ram.write_word(0x00000008, 0x01078533);
+  // ram.write_word(0x0000000c, 0x410785b3);
 
   // 0x00200793   li    a5,2
   // 0x00300813   li    a6,3
@@ -30,15 +35,15 @@ int main()
 
   // 0b1011110111000001111 0111011
 
-  cpu.pc = 0x00000000;
-  uint32_t cycles = 4;
-  while (cycles > 0) {
-    cpu.tick(ram);
-    cycles--;
-  }
+  // cpu.pc = 0x00000000;
+  // uint32_t cycles = 4;
+  // while (cycles > 0) {
+  //   cpu.tick(ram);
+  //   cycles--;
+  // }
 
-  std::cout << cpu.x[a0] << std::endl;
-  std::cout << cpu.x[a1] << std::endl;
+  // std::cout << cpu.x[a0] << std::endl;
+  // std::cout << cpu.x[a1] << std::endl;
 
   return 0;
 }

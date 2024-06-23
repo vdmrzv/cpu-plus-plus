@@ -42,17 +42,17 @@
 #define t6    31  // temporary register 6
 
 // opcodes
-#define LUI_OP    0b0110111 // lui
-#define AUIPC_OP  0b0010111 // aiupc
-#define JAL_OP    0b1101111 // jal
-#define JALR_OP   0b1100111 // jalr
-#define BRANCH_OP 0b1100011 // beq, bne, blt, bge, bltu, bgeu
-#define LOAD_OP   0b0000011 // lb, lh, lw, lbu, lhu
-#define STORE_OP  0b0100011 // sb, sh, sw
-#define ITYPE_OP  0b0010011 // addi, slti, sltiu, xori, ori, andi, slli, srli, srai, 
-#define RTYPE_OP  0b0110011 // add, sub, sll, slt, sltu, xor, srl, sra, or, and
-#define FENCE_OP  0b0001111 // fence
-#define SCALL_OP  0b1110011 // ecall, ebreak
+#define LUI_OP      0b0110111 // lui
+#define AUIPC_OP    0b0010111 // aiupc
+#define JAL_OP      0b1101111 // jal
+#define JALR_OP     0b1100111 // jalr
+#define BRANCH_OP   0b1100011 // beq, bne, blt, bge, bltu, bgeu
+#define LOAD_OP     0b0000011 // lb, lh, lw, lbu, lhu
+#define STORE_OP    0b0100011 // sb, sh, sw
+#define ITYPE_OP    0b0010011 // addi, slti, sltiu, xori, ori, andi, slli, srli, srai, 
+#define RTYPE_OP    0b0110011 // add, sub, sll, slt, sltu, xor, srl, sra, or, and
+#define FENCE_OP    0b0001111 // fence
+#define SYSCALL_OP  0b1110011 // ecall, ebreak
 
 using byte_t = uint8_t;
 using hword_t = uint16_t;

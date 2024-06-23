@@ -24,8 +24,6 @@ public:
   word_t read_word(word_t address) const;
   hword_t read_hword(word_t address) const;
 
-  void write_program(word_t address, std::vector<uint64_t> prog);
-
   int is_valid_address(word_t address) const;
 };
 
