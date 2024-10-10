@@ -131,7 +131,7 @@ void print_utype() {
 void print_jtype() {
 }
 
-// uops 
+// RV32I
 #define uop_lui     0x01
 #define uop_auipc   0x02
 #define uop_jal     0x03
@@ -172,6 +172,23 @@ void print_jtype() {
 #define uop_fence   0x26
 #define uop_ecall   0x27
 #define uop_ebreak  0x28
+
+// RV64I
+#define uop_lwu     0x29 
+#define uop_ld      0x30 
+#define uop_sd      0x3a
+// #define uop_slli    0x3b
+// #define uop_srli    0x3c
+// #define uop_srai    0x3d
+#define uop_addiw   0x3e
+#define uop_slliw   0x3f
+#define uop_srliw   0x40
+#define uop_sraiw   0x40
+#define uop_addw    0x41
+#define uop_subw    0x42
+#define uop_sllw    0x43
+#define uop_srlw    0x44
+#define uop_sraw    0x45
 
 // uint32_t add = [](uint32_t lhs, uint32_t rhs) {
 //   // x[i.rd] = x[i.rs1] + x[i.rs2];
