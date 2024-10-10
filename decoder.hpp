@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdio.h>
 #include "common.hpp"
 #include "instruction.hpp"
 
@@ -18,105 +19,76 @@
 #define SYSCALL_OP  0b1110011 // ecall, ebreak
 
 // beq, bne, blt, bge, bltu, bgeu
-uop_t handle_branch_op(word_t word) {
+uop handle_branch_op(word_t word) {
   uint8_t funct3 = ((word & funct3_mask) >> 12);
+  uop op;
   switch (funct3) {
-    case 0b000:
-      std::cout << "beq ";
-      return uop_beq;
-    case 0b001:
-      std::cout << "bne ";
-      return uop_bne;
-    case 0b100:
-      std::cout << "blt ";
-      return uop_blt;
-    case 0b101:
-      std::cout << "bge ";
-      return uop_bge;
-    case 0b110:
-      std::cout << "bltu ";
-      return uop_bltu;
-    case 0b111: // bgeu
-      std::cout << "bgeu ";
-      return uop_bgeu;
-    default:
-      std::cout << "illegal funct3 in BRANCH_OP ";
+    case 0b000: op = uop::beq; break;
+    case 0b001: op = uop::bne; break;
+    case 0b100: op = uop::blt; break;
+    case 0b101: op = uop::bge; break;
+    case 0b110: op = uop::bltu; break;
+    case 0b111: op = uop::bgeu; break;
+    default: throw std::runtime_error("illegal funct3 in BRANCH_OP");
   }
+  return op;
 }
 
 // lb, lh, lw, ld, lbu, lhu
-uop_t handle_load_op(word_t word) {
+uop handle_load_op(word_t word) {
   uint8_t funct3 = ((word & funct3_mask) >> 12);
+  uint8_t rd = ((word & funct3_mask) >> 12);
+  uint8_t rs1 = ((word & funct3_mask) >> 12);
+  int16_t imm = ((word & funct3_mask) >> 12);
+  uop op;
   switch (funct3) {
-    case 0b000:
-      std::cout << "lb ";
-      return uop_lb;
-    case 0b001:
-      std::cout << "lh ";
-      return uop_lh;
-    case 0b010:
-      std::cout << "lw ";
-      return uop_lw;
-    case 0b011:
-      std::cout << "ld ";
-      return uop_ld;
-    case 0b100:
-      std::cout << "lbu ";
-      return uop_lbu;
-    case 0b101:
-      std::cout << "lhu ";
-      return uop_lhu;
-    default:
-      std::cout << "illegal funct3 in LOAD_OP ";
+    case 0b000: op = uop::lb; break;
+    case 0b001: op = uop::lh; break;
+    case 0b010: op = uop::lw; break;
+    case 0b011: op = uop::ld; break;
+    case 0b100: op = uop::lbu; break;
+    case 0b101: op = uop::lhu; break;
+    default: throw std::runtime_error("illegal funct3 in LOAD_OP");
   }
 }
 
 // sb, sh, sw, sd
-uop_t handle_store_op(word_t word) {
+uop handle_store_op(word_t word) {
+  uint8_t rs1 = ((word & stype_rs1_mask) >> 15);
+  uint8_t rs2 = ((word & stype_rs2_mask) >> 20);
+  uint8_t imm4_0 = ((word & stype_imm4_0_mask) >> 7);
+  uint8_t imm11_5 = ((word & stype_imm11_5_mask) >> 25);
+  int16_t imm = (imm11_5 << 5) | imm4_0;
   uint8_t funct3 = ((word & funct3_mask) >> 12);
+  uop op;
   switch (funct3) {
-    case 0b000: // sb
-      std::cout << "sb ";
-      return uop_sb;
-    case 0b001: // sh
-      std::cout << "sh ";
-      return uop_sh;
-    case 0b010: // sw
-      std::cout << "sw ";
-      return uop_sw;
-    case 0b011: // sd
-      std::cout << "sd ";
-      return uop_sd;
-    default:
-      std::cout << "illegal funct3 in STORE_OP ";
+    case 0b000: op = uop::sb; break;
+    case 0b001: op = uop::sh; break;
+    case 0b010: op = uop::sw; break;
+    case 0b011: op = uop::sd; break;
+    default: throw std::runtime_error("illegal funct3 in STORE_OP");
   }
+  return op;
 }
 
 // addi, slti, sltiu, xori, ori, andi, slli, srli, srai
-uop_t handle_itype_op(word_t word) {
+uop handle_itype_op(word_t word) {
   uint8_t funct3 = ((word & funct3_mask) >> 12);
+  uop op;
   switch (funct3) {
-    case 0b000: // addi
-      std::cout << "addi ";
-      return uop_addi;
-    case 0b010: // slti
-      std::cout << "slti ";
-      return uop_slti;
-    case 0b011: // sltiu
-      std::cout << "sltiu ";
-      return uop_sltiu;
-    case 0b100: // xori
-      std::cout << "xori ";
-      return uop_xori;
-    case 0b110: // ori
-      std::cout << "ori ";
-      return uop_ori;
-    case 0b111: // andi
-      std::cout << "andi ";
-      return uop_andi;
-    case 0b001: // slli
-      std::cout << "slli ";
-      return uop_slli;
+    case 0b000: { // addi
+      uint8_t rd = (word & itype_rd_mask) >> 7;
+      uint8_t rs1 = (word & itype_rs1_mask) >> 15;
+      int16_t imm = ((word & itype_imm_mask) >> 20) + (15 << 12);
+      std::cout << "addi\t" << registers[rd] << "," << registers[rs1] << "," << imm;
+      op = uop::addi;
+    }
+    case 0b010: op = uop::slti; break;
+    case 0b011: op = uop::sltiu; break;
+    case 0b100: op = uop::xori; break;
+    case 0b110: op = uop::ori; break;
+    case 0b111: op = uop::andi; break;
+    case 0b001: op = uop::slli; break;
     case 0b101: {// srli, srai
       uint8_t funct7 = ((word & funct7_mask) >> 25);
       if (funct7 == 0b0000000) {
@@ -130,107 +102,106 @@ uop_t handle_itype_op(word_t word) {
     default:
       std::cout << "illegal funct3 in ITYPE_OP ";
   }
+  return op;
 }
 
 // add, sub, sll, slt, sltu, xor, srl, sra, or, and
-uop_t handle_rtype_op(word_t word) {
+uop handle_rtype_op(word_t word) {
   uint8_t funct3 = ((word & funct3_mask) >> 12);
+  uop op;
   switch (funct3) {
-    case 0b000: { // addi
+    case 0b000: {
       uint8_t funct7 = ((word & funct7_mask) >> 25);
       if (funct7 == 0b0000000) {
-        std::cout << "add ";
+        op = uop::add;
       } else if (funct7 == 0b0100000) {
-        std::cout << "sub ";      
+        op = uop::sub;
       } else {
-        std::cout << "illegal funct7 in RTYPE_OP ";
+        throw std::runtime_error("illegal funct7 in RTYPE_OP funct3(000)");
       }
     }
-    case 0b001:
-      return uop_sll;
-    case 0b010:
-      return uop_slt;
-    case 0b011:
-      return uop_sltu;
-    case 0b100:
-      return uop_xor;
+    case 0b001: op = uop::sll; break;
+    case 0b010: op = uop::slt; break;
+    case 0b011: op = uop::sltu; break;
+    case 0b100: op = uop::xor_uop; break;
     case 0b101: {
       uint8_t funct7 = ((word & funct7_mask) >> 25);
       if (funct7 == 0b0000000) {
-        return uop_srl;
+        op = uop::srl;
       } else if (funct7 == 0b0100000) {
-        return uop_sra;
+        op = uop::sra;
       } else {
-        std::cout << "illegal funct7 in RTYPE_OP ";
+        throw std::runtime_error("illegal funct7 in RTYPE_OP funct3(101)");
       }
     }
-    case 0b110:
-      return uop_or;
-    case 0b111:
-      return uop_and;
+    case 0b110: op = uop::or_uop;
+    case 0b111: op = uop::and_uop;
   }
+  return op;
 };
 
 // addw, subw, sllw, srlw, sraw
-uop_t handle_word_op(word_t word) {
+uop handle_word_op(word_t word) {
   uint8_t funct3 = ((word & funct3_mask) >> 12);
+  uop op;
   switch (funct3) {
-    case 0b000: { // addw, subw
+    case 0b000: {
       uint8_t funct7 = ((word & funct7_mask) >> 25);
       if (funct7 == 0b0000000) {
-        std::cout << "addw ";
+        op = uop::addw;
       } else if (funct7 == 0b0100000) {
-        std::cout << "subw ";      
+        op = uop::subw;
       } else {
-        std::cout << "illegal funct7 in WORD_OP ";
+        throw std::runtime_error("illegal funct7 in WORD_OP funct3(000)");
       }
     }
-    case 0b001:
-      return uop_sllw;
-    case 0b101: { // srlw, sraw
+    case 0b001: op = uop::sllw; break;
+    case 0b101: {
       uint8_t funct7 = ((word & funct7_mask) >> 25);
       if (funct7 == 0b0000000) {
-        return uop_srlw;
+        op = uop::srlw;
       } else if (funct7 == 0b0100000) {
-        return uop_sraw;
+        op = uop::sraw;
       } else {
-        std::cout << "illegal funct7 in WORD_OP ";
+        throw std::runtime_error("illegal funct7 in WORD_OP funct3(101)");
       }
     }
-    default:
-      std::cout << "illegal funct3 in WORD_OP" << std::endl;
+    default: throw std::runtime_error("illegal funct3 in WORD_OP");
   }
+  return op;
 };
 
-uop_t handle_syscall_op(word_t word) {
-  // uint8_t funct3 = ((word & funct3_mask) >> 12);
+uop handle_syscall_op(word_t word) {
   uint16_t imm = ((word & itype_imm_mask) >> 20);
+  uop op;
   if (imm == 0b000000000000) {
-    return uop_ecall;
+    op = uop::ecall;
   } else if (imm == 0b000000000001) {
-    return uop_ebreak;    
+    op = uop::ebreak;    
   } else {
-    std::cout << "illegal imm in SYSCALL_OP ";
+    throw std::runtime_error("illegal imm in SYSCALL_OP");
   }
+  return op;
 }
 
 class Decoder {
 public:
-  uop_t decode(word_t word);
+  uop decode(word_t word);
   word_t decompress(hword_t hword);
 };
 
-uop_t Decoder::decode(word_t word) {
+uop Decoder::decode(word_t word) {
   uint8_t opcode = word & opcode_mask;
+  uop op;
   switch (opcode) {
     case LUI_OP: // lui
-      return uop_lui;
+      op = uop::lui;
     case AUIPC_OP: // aiupc
-      return uop_auipc;
+      op = uop::auipc;
     case JAL_OP: // jal
-      return uop_jal;
+      op = uop::jal;
     case JALR_OP: // jalr
-      return uop_jalr;
+      op = uop::jalr;
     case BRANCH_OP: // beq, bne, blt, bge, bltu, bgeu
       return handle_branch_op(word);
     case LOAD_OP: // lb, lh, lw, lbu, lhu
@@ -244,11 +215,11 @@ uop_t Decoder::decode(word_t word) {
     case WORD_OP: // addw, subw, sllw, srlw, sraw
       return handle_word_op(word);
     case FENCE_OP: // fence
-      return uop_fence;
+      op = uop::fence;
     case SYSCALL_OP: // ecall, ebreak
       return handle_syscall_op(word);
     default:
-      std::cout << "illegal opcode ";
+      throw std::runtime_error("illegal opcode");
   }
 }
 

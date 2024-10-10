@@ -51,13 +51,6 @@ int main(int argc, char **argv) {
   size_t n_lines = hex_lines.size();
   word_t w;
 
-
-class Decoder {
-public:
-  uop_t decode(word_t word);
-  word_t decompress(hword_t hword);
-};
-
   for (size_t i = 0; i < n_lines; ++i) {
     // convert hex string to binary
     std::string bin_str = hex_to_bin(hex_lines[i]);
@@ -69,7 +62,7 @@ public:
       std::bitset<32> fw(bin_str);
       w = static_cast<word_t>(fw.to_ulong());
     } else {
-      throw std::runtime_error("HEX and ASM files should have same number of lines.");
+      throw std::runtime_error("Something wrong with line " + std::to_string(i) + " in .hex file");
     }
 
     std::cout << asm_lines[i] << "\t" << decoder.decode(w) << std::endl;
