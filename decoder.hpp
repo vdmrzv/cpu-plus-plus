@@ -3,23 +3,197 @@
 #include "common.hpp"
 #include "instruction.hpp"
 
+// opcodes
+#define LUI_OP      0b0110111 // lui
+#define AUIPC_OP    0b0010111 // aiupc
+#define JAL_OP      0b1101111 // jal
+#define JALR_OP     0b1100111 // jalr
+#define BRANCH_OP   0b1100011 // beq, bne, blt, bge, bltu, bgeu
+#define LOAD_OP     0b0000011 // lb, lh, lw, lbu, lhu
+#define STORE_OP    0b0100011 // sb, sh, sw
+#define ITYPE_OP    0b0010011 // addi, slti, sltiu, xori, ori, andi, slli, srli, srai, 
+#define RTYPE_OP    0b0110011 // add, sub, sll, slt, sltu, xor, srl, sra, or, and
+#define FENCE_OP    0b0001111 // fence
+#define SYSCALL_OP  0b1110011 // ecall, ebreak
+
+
+// beq, bne, blt, bge, bltu, bgeu
+uop_t handle_branch_op(word_t word) {
+  uint8_t funct3 = ((word && funct3_mask) >> 12);
+  switch (funct3) {
+    case 0b000:
+      std::cout << "beq ";
+      return uop_beq;
+    case 0b001:
+      std::cout << "bne ";
+      return uop_bne;
+    case 0b100:
+      std::cout << "blt ";
+      return uop_blt;
+    case 0b101:
+      std::cout << "bge ";
+      return uop_bge;
+    case 0b110:
+      std::cout << "bltu ";
+      return uop_bltu;
+    case 0b111: // bgeu
+      std::cout << "bgeu ";
+      return uop_bgeu;
+    default:
+      std::cout << "illegal funct3 in BRANCH_OP ";
+  }
+}
+
+// lb, lh, lw, lbu, lhu
+uop_t handle_load_op(word_t word) {
+  uint8_t funct3 = ((word && funct3_mask) >> 12);
+  switch (funct3) {
+    case 0b000:
+      std::cout << "lb ";
+      return uop_lb;
+    case 0b001:
+      std::cout << "lh ";
+      return uop_lh;
+    case 0b010:
+      std::cout << "lw ";
+      return uop_lw;
+    case 0b100:
+      std::cout << "lbu ";
+      return uop_lbu;
+    case 0b101:
+      std::cout << "lhu ";
+      return uop_lhu;
+    default:
+      std::cout << "illegal funct3 in LOAD_OP ";
+  }
+}
+
+// sb, sh, sw
+uop_t handle_store_op(word_t word) {
+  uint8_t funct3 = ((word && funct3_mask) >> 12);
+  switch (funct3) {
+    case 0b000: // sb
+      std::cout << "sb ";
+      return uop_sb;
+    case 0b001: // sh
+      std::cout << "sh ";
+      return uop_sh;
+    case 0b010: // sw
+      std::cout << "sw ";
+      return uop_sw;
+    default:
+      std::cout << "illegal funct3 in STORE_OP ";
+  }
+}
+
+// addi, slti, sltiu, xori, ori, andi, slli, srli, srai
+uop_t handle_itype_op(word_t word) {
+  uint8_t funct3 = ((word && funct3_mask) >> 12);
+  switch (funct3) {
+    case 0b000: // addi
+      std::cout << "addi ";
+      return uop_addi;
+    case 0b010: // slti
+      std::cout << "slti ";
+      return uop_slti;
+    case 0b011: // sltiu
+      std::cout << "sltiu ";
+      return uop_sltiu;
+    case 0b100: // xori
+      std::cout << "xori ";
+      return uop_xori;
+    case 0b110: // ori
+      std::cout << "ori ";
+      return uop_ori;
+    case 0b111: // andi
+      std::cout << "andi ";
+      return uop_andi;
+    case 0b001: // slli
+      std::cout << "slli ";
+      return uop_slli;
+    case 0b101: {// srli, srai
+      uint8_t funct7 = ((word && funct7_mask) >> 25);
+      if (funct7 == 0b0000000) {
+        std::cout << "srli ";
+      } else if (funct7 == 0b0100000) {
+        std::cout << "srai ";      
+      } else {
+        std::cout << "illegal funct7 in ITYPE_OP ";
+      }
+    }
+    default:
+      std::cout << "illegal funct3 in ITYPE_OP ";
+  }
+}
+
+// add, sub, sll, slt, sltu, xor, srl, sra, or, and
+uop_t handle_rtype_op(word_t word) {
+  uint8_t funct3 = ((word && funct3_mask) >> 12);
+  switch (funct3) {
+    case 0b000: { // addi
+      uint8_t funct7 = ((word && funct7_mask) >> 25);
+      if (funct7 == 0b0000000) {
+        std::cout << "add ";
+      } else if (funct7 == 0b0100000) {
+        std::cout << "sub ";      
+      } else {
+        std::cout << "illegal funct7 in RTYPE_OP ";
+      }
+    }
+    case 0b001:
+      return uop_sll;
+    case 0b010:
+      return uop_slt;
+    case 0b011:
+      return uop_sltu;
+    case 0b100:
+      return uop_xor;
+    case 0b101: {
+      uint8_t funct7 = ((word && funct7_mask) >> 25);
+      if (funct7 == 0b0000000) {
+        return uop_srl;
+      } else if (funct7 == 0b0100000) {
+        return uop_sra;
+      } else {
+        std::cout << "illegal funct7 in RTYPE_OP ";
+      }
+    }
+    case 0b110:
+      return uop_or;
+    case 0b111:
+      return uop_and;
+  }
+};
+
+uop_t handle_syscall_op(word_t word) {
+  // uint8_t funct3 = ((word && funct3_mask) >> 12);
+  uint16_t imm = ((word && itype_imm_mask) >> 20);
+  if (imm == 0b000000000000) {
+    return uop_ecall;
+  } else if (imm == 0b000000000001) {
+    return uop_ebreak;    
+  } else {
+    std::cout << "illegal imm in SYSCALL_OP ";
+  }
+}
+
 class Decoder {
 public:
-  uop decode(word_t word);
+  uop_t decode(word_t word);
   word_t decompress(hword_t hword);
 };
 
-uop Decoder::decode(word_t word) {
+uop_t Decoder::decode(word_t word) {
   uint8_t opcode = word & opcode_mask;
   switch (opcode) {
     case LUI_OP:      // lui
-      return lui;
+      return uop_lui;
     case AUIPC_OP:    // aiupc
-      return auipc;
+      return uop_auipc;
     case JAL_OP:      // jal
-      return jal;
+      return uop_jal;
     case JALR_OP:     // jalr
-      return jalr;
+      return uop_jalr;
     case BRANCH_OP:   // beq, bne, blt, bge, bltu, bgeu
       return handle_branch_op(word);
     case LOAD_OP:     // lb, lh, lw, lbu, lhu
@@ -31,7 +205,7 @@ uop Decoder::decode(word_t word) {
     case RTYPE_OP:    // add, sub, sll, slt, sltu, xor, srl, sra, or, and
       return handle_rtype_op(word);
     case FENCE_OP:    // fence
-      return fence;
+      return uop_fence;
     case SYSCALL_OP:  // ecall, ebreak
       return handle_syscall_op(word);
     default:
@@ -468,159 +642,3 @@ word_t Decoder::decompress(hword_t halfword) {
   }
 }
 
-// beq, bne, blt, bge, bltu, bgeu
-uop handle_branch_op(word_t word) {
-  uint8_t funct3 = ((word && funct3_mask) >> 12);
-  switch (funct3) {
-    case 0b000:
-      std::cout << "beq ";
-      return beq;
-    case 0b001:
-      std::cout << "bne ";
-      return bne;
-    case 0b100:
-      std::cout << "blt ";
-      return blt;
-    case 0b101:
-      std::cout << "bge ";
-      return bge;
-    case 0b110:
-      std::cout << "bltu ";
-      return bltu;
-    case 0b111: // bgeu
-      std::cout << "bgeu ";
-      return bgeu;
-    default:
-      std::cout << "illegal funct3 in BRANCH_OP ";
-  }
-}
-
-// lb, lh, lw, lbu, lhu
-uop handle_load_op(word_t word) {
-  uint8_t funct3 = ((word && funct3_mask) >> 12);
-  switch (funct3) {
-    case 0b000:
-      std::cout << "lb ";
-      return lb;
-    case 0b001:
-      std::cout << "lh ";
-      return lh;
-    case 0b010:
-      std::cout << "lw ";
-      return lw;
-    case 0b100:
-      std::cout << "lbu ";
-      return lbu;
-    case 0b101:
-      std::cout << "lhu ";
-      return lhu;
-    default:
-      std::cout << "illegal funct3 in LOAD_OP ";
-  }
-}
-
-// sb, sh, sw
-uop handle_store_op(word_t word) {
-  uint8_t funct3 = ((word && funct3_mask) >> 12);
-  switch (funct3) {
-    case 0b000: // sb
-      std::cout << "sb ";
-      return sb;
-    case 0b001: // sh
-      std::cout << "sh ";
-      return sh;
-    case 0b010: // sw
-      std::cout << "sw ";
-      return sw;
-    default:
-      std::cout << "illegal funct3 in STORE_OP ";
-  }
-}
-
-// addi, slti, sltiu, xori, ori, andi, slli, srli, srai
-uop handle_itype_op(word_t word) {
-  uint8_t funct3 = ((word && funct3_mask) >> 12);
-  switch (funct3) {
-    case 0b000: // addi
-      std::cout << "addi ";
-      return addi;
-    case 0b010: // slti
-      std::cout << "slti ";
-      return slti;
-    case 0b011: // sltiu
-      std::cout << "sltiu ";
-      return sltiu;
-    case 0b100: // xori
-      std::cout << "xori ";
-      return xori;
-    case 0b110: // ori
-      std::cout << "ori ";
-      return ori;
-    case 0b111: // andi
-      std::cout << "andi ";
-      return andi;
-    case 0b001: // slli
-      std::cout << "slli ";
-      return slli;
-    case 0b101: // srli, srai
-      uint8_t funct7 = ((word && funct7_mask) >> 25);
-      if (funct7 == 0b0000000) {
-        std::cout << "srli ";
-      } else if (funct7 == 0b0100000) {
-        std::cout << "srai ";      
-      } else {
-        std::cout << "illegal funct7 in ITYPE_OP ";
-      }
-    default:
-      std::cout << "illegal funct3 in ITYPE_OP ";
-  }
-}
-
-// add, sub, sll, slt, sltu, xor, srl, sra, or, and
-uop handle_rtype_op(word_t word) {
-  uint8_t funct3 = ((word && funct3_mask) >> 12);
-  switch (funct3) {
-    case 0b000: // addi
-      uint8_t funct7 = ((word && funct7_mask) >> 25);
-      if (funct7 == 0b0000000) {
-        std::cout << "add ";
-      } else if (funct7 == 0b0100000) {
-        std::cout << "sub ";      
-      } else {
-        std::cout << "illegal funct7 in RTYPE_OP ";
-      }    
-    case 0b001:
-      return sll;
-    case 0b010:
-      return slt;
-    case 0b011:
-      return sltu;
-    case 0b100:
-      return xor;
-    case 0b101:
-      uint8_t funct7 = ((word && funct7_mask) >> 25);
-      if (funct7 == 0b0000000) {
-        return srl;
-      } else if (funct7 == 0b0100000) {
-        return sra;
-      } else {
-        std::cout << "illegal funct7 in RTYPE_OP ";
-      }
-    case 0b110:
-      return or;
-    case 0b111:
-      return and;
-  }
-};
-
-uop handle_syscall_op(word_t word) {
-  // uint8_t funct3 = ((word && funct3_mask) >> 12);
-  uint16_t imm = ((word && itype_imm_mask) >> 20);
-  if (imm == 0b000000000000) {
-    return ecall;
-  } else if (imm == 0b000000000001) {
-    return ebreak;    
-  } else {
-    std::cout << "illegal imm in SYSCALL_OP ";
-  }
-}
